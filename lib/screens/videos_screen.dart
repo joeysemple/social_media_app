@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/video_post_card.dart';
 import '../models/video_model.dart';
 import '../themes/app_theme.dart';
+import '../widgets/discover_grid.dart';
 
 class VideosScreen extends StatefulWidget {
   const VideosScreen({super.key});
@@ -38,7 +39,6 @@ class _VideosScreenState extends State<VideosScreen> with WidgetsBindingObserver
     },
   ];
 
-  // Add sample videos for "For You" feed
   final List<VideoModel> _forYouVideos = [
     VideoModel(
       id: '1',
@@ -151,11 +151,27 @@ class _VideosScreenState extends State<VideosScreen> with WidgetsBindingObserver
 
   @override
   Widget build(BuildContext context) {
-    final currentVideos = _getCurrentFeedVideos();
+    if (_selectedTab == 1) {
+      return DiscoverGrid(
+        videos: _discoverVideos.isEmpty ? _forYouVideos : _discoverVideos,
+        onVideoTap: (video) {
+          print('Video tapped: ${video.id}');
+          // TODO: Implement video playback
+        },
+        onBackPress: () {
+          setState(() {
+            _selectedTab = 2; // Go back to "For You" feed
+            _currentPage = 0;
+          });
+          _initializeVideoKeys();
+          _pageController.jumpToPage(0);
+        },
+      );
+    }
 
     return Stack(
       children: [
-        if (currentVideos.isEmpty)
+        if (_getCurrentFeedVideos().isEmpty)
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -182,11 +198,11 @@ class _VideosScreenState extends State<VideosScreen> with WidgetsBindingObserver
             scrollDirection: Axis.vertical,
             controller: _pageController,
             onPageChanged: _handlePageChange,
-            itemCount: currentVideos.length,
+            itemCount: _getCurrentFeedVideos().length,
             itemBuilder: (context, index) {
               return VideoPostCard(
                 key: _videoKeys[index],
-                video: currentVideos[index],
+                video: _getCurrentFeedVideos()[index],
                 isVisible: _currentPage == index,
               );
             },
