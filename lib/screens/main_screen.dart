@@ -5,6 +5,8 @@ import '../themes/app_theme.dart';
 import '../screens/videos_screen.dart';
 import '../screens/live_screen.dart';
 import '../screens/inbox_screen.dart';
+import '../screens/threads_screen.dart';  // Add this import
+
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -23,12 +25,7 @@ class _MainScreenState extends State<MainScreen> {
         index: _currentIndex,
         children: const [
           VideosScreen(),
-          Center(
-            child: Text(
-              'Threads',
-              style: TextStyle(color: AppTheme.vsLightBlue, fontSize: 24),
-            ),
-          ),
+          ThreadsScreen(),  // Replace the Center widget with ThreadsScreen
           LiveScreen(),
           InboxScreen(),
           Center(
