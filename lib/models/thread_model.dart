@@ -4,9 +4,9 @@ class ThreadModel {
   final String userAvatar;
   final String content;
   final String timestamp;
-  final int likes;
-  final int comments;
-  final int reposts;
+  int likes;
+  int comments;
+  int reposts;
   final List<String> tags;
 
   ThreadModel({
@@ -19,5 +19,21 @@ class ThreadModel {
     required this.comments,
     required this.reposts,
     this.tags = const [],
+  });
+}
+
+class CommentModel {
+  final String id;
+  final String username;
+  final String content;
+  final String timestamp;
+  int likes;
+
+  CommentModel({
+    required this.id,
+    required this.username,
+    required this.content,
+    required this.timestamp,
+    this.likes = 0,
   });
 }

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/thread_model.dart';
 import '../themes/app_theme.dart';
 import 'new_thread_screen.dart';
-import '../screens/category_management_screen.dart'; // Import the new screen
+import 'thread_detail_screen.dart';
+import '../screens/category_management_screen.dart';
 
 class ThreadsScreen extends StatefulWidget {
   const ThreadsScreen({super.key});
@@ -225,10 +226,55 @@ class _ThreadsScreenState extends State<ThreadsScreen> {
   }
 }
 
-class _ThreadCard extends StatelessWidget {
+class _ThreadCard extends StatefulWidget {
   final ThreadModel thread;
 
   const _ThreadCard({required this.thread});
+
+  @override
+  _ThreadCardState createState() => _ThreadCardState();
+}
+
+class _ThreadCardState extends State<_ThreadCard> {
+  late ThreadModel _thread;
+  bool _isLiked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _thread = widget.thread;
+  }
+
+  void _toggleLike() {
+    setState(() {
+      _isLiked = !_isLiked;
+      _thread.likes += _isLiked ? 1 : -1;
+    });
+  }
+
+  void _handleComment() {
+    // Navigate to thread detail screen
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ThreadDetailScreen(thread: _thread),
+      ),
+    );
+  }
+
+  void _handleRepost() {
+    setState(() {
+      _thread.reposts++;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Thread reposted!')),
+    );
+  }
+
+  void _handleShare() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Share feature coming soon!')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -240,7 +286,12 @@ class _ThreadCard extends StatelessWidget {
       ),
       child: InkWell(
         onTap: () {
-          // TODO: Navigate to thread detail view
+          // Navigate to thread detail screen
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => ThreadDetailScreen(thread: _thread),
+            ),
+          );
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -251,7 +302,7 @@ class _ThreadCard extends StatelessWidget {
               Row(
                 children: [
                   CircleAvatar(
-                    backgroundImage: NetworkImage(thread.userAvatar),
+                    backgroundImage: NetworkImage(_thread.userAvatar),
                     radius: 20,
                   ),
                   const SizedBox(width: 12),
@@ -259,14 +310,14 @@ class _ThreadCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        thread.username,
+                        _thread.username,
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        thread.timestamp,
+                        _thread.timestamp,
                         style: TextStyle(
                           color: Colors.grey[400],
                           fontSize: 12,
@@ -285,17 +336,17 @@ class _ThreadCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                thread.content,
+                _thread.content,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                 ),
               ),
               const SizedBox(height: 12),
-              if (thread.tags.isNotEmpty)
+              if (_thread.tags.isNotEmpty)
                 Wrap(
                   spacing: 8,
-                  children: thread.tags.map((tag) {
+                  children: _thread.tags.map((tag) {
                     return InkWell(
                       onTap: () {
                         // TODO: Navigate to tag view
@@ -315,20 +366,24 @@ class _ThreadCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildInteractionButton(
-                    Icons.favorite_border,
-                    thread.likes.toString(),
+                    _isLiked ? Icons.favorite : Icons.favorite_border,
+                    _thread.likes.toString(),
+                    _toggleLike,
+                    color: _isLiked ? Colors.red : Colors.white,
                   ),
                   _buildInteractionButton(
                     Icons.comment_outlined,
-                    thread.comments.toString(),
+                    _thread.comments.toString(),
+                    _handleComment,
                   ),
                   _buildInteractionButton(
                     Icons.repeat,
-                    thread.reposts.toString(),
+                    _thread.reposts.toString(),
+                    _handleRepost,
                   ),
                   IconButton(
                     icon: const Icon(Icons.share_outlined, color: Colors.white),
-                    onPressed: () {},
+                    onPressed: _handleShare,
                   ),
                 ],
               ),
@@ -339,17 +394,22 @@ class _ThreadCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInteractionButton(IconData icon, String count) {
+  Widget _buildInteractionButton(
+    IconData icon, 
+    String count, 
+    VoidCallback onPressed, 
+    {Color color = Colors.white}
+  ) {
     return Row(
       children: [
         IconButton(
-          icon: Icon(icon, color: Colors.white),
-          onPressed: () {},
+          icon: Icon(icon, color: color),
+          onPressed: onPressed,
         ),
         Text(
           count,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: color,
             fontSize: 14,
           ),
         ),
