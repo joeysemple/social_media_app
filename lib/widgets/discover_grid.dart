@@ -5,167 +5,139 @@ import '../themes/app_theme.dart';
 class DiscoverGrid extends StatelessWidget {
   final List<VideoModel> videos;
   final Function(VideoModel) onVideoTap;
-  final VoidCallback onBackPress;  // Add callback for back navigation
+  final VoidCallback onBackPress;
 
   const DiscoverGrid({
     super.key,
     required this.videos,
     required this.onVideoTap,
-    required this.onBackPress,  // Add this parameter
+    required this.onBackPress,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Add additional dummy data for scrolling
+    final extendedVideos = List<VideoModel>.from(videos)
+      ..addAll(List.generate(
+        20,
+        (index) => VideoModel(
+          id: (videos.length + index + 1).toString(),
+          videoUrl: 'https://example.com/video${index + 1}.mp4',
+          userAvatar: 'https://i.pravatar.cc/150?img=${index + 1}',
+          username: '@user${index + 1}',
+          description: 'This is a sample video description #${index + 1}',
+          likes: 100 + index * 10,
+          comments: 20 + index * 5,
+          shares: 5 + index,
+        ),
+      ));
+
     return Scaffold(
-      backgroundColor: AppTheme.primaryBlack,
-      body: CustomScrollView(
-        slivers: [
-          // Top Bar with Back Button
-          SliverAppBar(
-            backgroundColor: AppTheme.surfaceBlack,
-            pinned: true,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: AppTheme.vsBlue),
-              onPressed: onBackPress,
-            ),
-            title: const Text(
-              'Discover',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              // Top Bar
+              SliverAppBar(
+                backgroundColor: Colors.black.withOpacity(0.9),
+                pinned: true,
               ),
-            ),
-            actions: [
-              IconButton(
-                icon: Icon(
-                  Icons.search,
-                  color: Colors.white.withOpacity(0.8),
+
+              // Trending Categories
+              SliverToBoxAdapter(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Trending Categories',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 50,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          children: [
+                            _buildCategoryChip('Gaming', Icons.sports_esports),
+                            _buildCategoryChip('Music', Icons.music_note),
+                            _buildCategoryChip('Technology', Icons.computer),
+                            _buildCategoryChip('Sports', Icons.sports_basketball),
+                            _buildCategoryChip('Comedy', Icons.sentiment_very_satisfied),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                onPressed: () {
-                  print('Search pressed');
-                },
+              ),
+
+              // Video Grid
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 0.8,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => _buildVideoCard(extendedVideos[index]),
+                    childCount: extendedVideos.length,
+                  ),
+                ),
               ),
             ],
-          ),
-
-          // Trending Categories
-          SliverToBoxAdapter(
-            child: Container(
-              color: AppTheme.surfaceBlack,
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryBlack,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppTheme.vsBlue.withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.trending_up,
-                          color: AppTheme.vsBlue,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Trending Categories',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 40,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: [
-                        _buildCategoryChip('Gaming', Icons.sports_esports),
-                        _buildCategoryChip('Music', Icons.music_note),
-                        _buildCategoryChip('Technology', Icons.computer),
-                        _buildCategoryChip('Sports', Icons.sports_basketball),
-                        _buildCategoryChip('Comedy', Icons.sentiment_very_satisfied),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Rest of your existing grid code...
-          SliverPadding(
-            padding: const EdgeInsets.all(16),
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 0.8,
-              ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) => _buildVideoCard(videos[index]),
-                childCount: videos.length,
-              ),
-            ),
           ),
         ],
       ),
     );
   }
 
-  // Your existing _buildCategoryChip and _buildVideoCard methods stay the same
-
   Widget _buildCategoryChip(String label, IconData icon) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppTheme.vsBlue.withOpacity(0.3),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: () {
+        print('Category tapped: $label');
+      },
+      child: Container(
+        margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppTheme.vsBlue.withOpacity(0.8), AppTheme.vsBlue.withOpacity(0.4)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 16,
-            color: AppTheme.vsBlue,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+          borderRadius: BorderRadius.circular(25),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.vsBlue.withOpacity(0.4),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.white, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -173,68 +145,34 @@ class DiscoverGrid extends StatelessWidget {
   Widget _buildVideoCard(VideoModel video) {
     return GestureDetector(
       onTap: () => onVideoTap(video),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceBlack,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppTheme.vsGrey.withOpacity(0.3),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Thumbnail
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(12),
-                  ),
-                  image: DecorationImage(
-                    image: NetworkImage(video.userAvatar), // Using avatar as thumbnail for now
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.vsBlue.withOpacity(0.3),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppTheme.vsBlue.withOpacity(0.5),
-                        width: 1,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.play_arrow,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                ),
+      child: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              image: DecorationImage(
+                image: NetworkImage(video.userAvatar),
+                fit: BoxFit.cover,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.5),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-
-            // Video Info
-            Container(
-              padding: const EdgeInsets.all(12),
+          ),
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: Container(
               decoration: BoxDecoration(
-                color: AppTheme.surfaceBlack,
+                color: Colors.black.withOpacity(0.6),
                 borderRadius: const BorderRadius.vertical(
                   bottom: Radius.circular(12),
                 ),
               ),
+              padding: const EdgeInsets.all(8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -251,9 +189,8 @@ class DiscoverGrid extends StatelessWidget {
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.bold,
                           ),
-                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -265,6 +202,7 @@ class DiscoverGrid extends StatelessWidget {
                     style: TextStyle(
                       color: Colors.grey[400],
                       fontSize: 11,
+                      fontStyle: FontStyle.italic,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -272,9 +210,12 @@ class DiscoverGrid extends StatelessWidget {
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
+
+
+

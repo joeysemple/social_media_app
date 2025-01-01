@@ -10,7 +10,8 @@ class VideosScreen extends StatefulWidget {
   State<VideosScreen> createState() => _VideosScreenState();
 }
 
-class _VideosScreenState extends State<VideosScreen> with WidgetsBindingObserver {
+class _VideosScreenState extends State<VideosScreen>
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   int _selectedTab = 2; // Start with "For You" tab
@@ -18,22 +19,18 @@ class _VideosScreenState extends State<VideosScreen> with WidgetsBindingObserver
 
   final List<Map<String, dynamic>> _tabs = [
     {
-      'icon': Icons.live_tv_rounded,
       'label': 'Live',
       'dotColor': Colors.red,
     },
     {
-      'icon': Icons.explore_rounded,
       'label': 'Discover',
       'dotColor': AppTheme.vsLightBlue,
     },
     {
-      'icon': Icons.local_fire_department_rounded,
       'label': 'For You',
       'dotColor': AppTheme.vsBlue,
     },
     {
-      'icon': Icons.people_rounded,
       'label': 'Following',
       'dotColor': Colors.green,
     },
@@ -42,7 +39,8 @@ class _VideosScreenState extends State<VideosScreen> with WidgetsBindingObserver
   final List<VideoModel> _forYouVideos = [
     VideoModel(
       id: '1',
-      videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+      videoUrl:
+          'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
       userAvatar: 'https://pbs.twimg.com/media/FjU2lkcWYAgNG6d.jpg',
       username: '@johndoe',
       description: 'Check out this cool video! #trending #viral',
@@ -52,33 +50,14 @@ class _VideosScreenState extends State<VideosScreen> with WidgetsBindingObserver
     ),
     VideoModel(
       id: '2',
-      videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+      videoUrl:
+          'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
       userAvatar: 'https://i.pravatar.cc/150?img=2',
       username: '@techie',
       description: 'Another awesome video 🎥 #coding #tech',
       likes: 845,
       comments: 156,
       shares: 32,
-    ),
-    VideoModel(
-      id: '3',
-      videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-      userAvatar: 'https://i.pravatar.cc/150?img=3',
-      username: '@creator',
-      description: 'Making content is fun! 🎮 #create #inspire',
-      likes: 2100,
-      comments: 342,
-      shares: 89,
-    ),
-    VideoModel(
-      id: '4',
-      videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-      userAvatar: 'https://i.pravatar.cc/150?img=4',
-      username: '@traveler',
-      description: 'Adventures never end! 🌎 #travel #explore',
-      likes: 3400,
-      comments: 445,
-      shares: 120,
     ),
   ];
 
@@ -127,7 +106,7 @@ class _VideosScreenState extends State<VideosScreen> with WidgetsBindingObserver
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || 
+    if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached) {
       _pauseAllVideos();
@@ -151,188 +130,181 @@ class _VideosScreenState extends State<VideosScreen> with WidgetsBindingObserver
 
   @override
   Widget build(BuildContext context) {
-    if (_selectedTab == 1) {
-      return DiscoverGrid(
-        videos: _discoverVideos.isEmpty ? _forYouVideos : _discoverVideos,
-        onVideoTap: (video) {
-          print('Video tapped: ${video.id}');
-          // TODO: Implement video playback
-        },
-        onBackPress: () {
-          setState(() {
-            _selectedTab = 2; // Go back to "For You" feed
-            _currentPage = 0;
-          });
-          _initializeVideoKeys();
-          _pageController.jumpToPage(0);
-        },
-      );
-    }
-
-    return Stack(
-      children: [
-        if (_getCurrentFeedVideos().isEmpty)
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  _tabs[_selectedTab]['icon'],
-                  size: 48,
-                  color: _tabs[_selectedTab]['dotColor'],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'No ${_tabs[_selectedTab]['label']} content yet',
-                  style: TextStyle(
-                    color: _tabs[_selectedTab]['dotColor'],
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          if (_selectedTab == 1)
+            DiscoverGrid(
+              videos: _discoverVideos.isEmpty ? _forYouVideos : _discoverVideos,
+              onVideoTap: (video) {
+                print('Video tapped: ${video.id}');
+              },
+              onBackPress: () {
+                setState(() {
+                  _selectedTab = 2; // Go back to "For You" feed
+                  _currentPage = 0;
+                });
+                _initializeVideoKeys();
+                _pageController.jumpToPage(0);
+              },
+            )
+          else if (_getCurrentFeedVideos().isEmpty)
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'No ${_tabs[_selectedTab]['label']} content yet',
+                    style: TextStyle(
+                      color: _tabs[_selectedTab]['dotColor'],
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
+            )
+          else
+            PageView.builder(
+              scrollDirection: Axis.vertical,
+              controller: _pageController,
+              onPageChanged: _handlePageChange,
+              itemCount: _getCurrentFeedVideos().length,
+              itemBuilder: (context, index) {
+                return VideoPostCard(
+                  key: _videoKeys[index],
+                  video: _getCurrentFeedVideos()[index],
+                  isVisible: _currentPage == index,
+                );
+              },
             ),
-          )
-        else
-          PageView.builder(
-            scrollDirection: Axis.vertical,
-            controller: _pageController,
-            onPageChanged: _handlePageChange,
-            itemCount: _getCurrentFeedVideos().length,
-            itemBuilder: (context, index) {
-              return VideoPostCard(
-                key: _videoKeys[index],
-                video: _getCurrentFeedVideos()[index],
-                isVisible: _currentPage == index,
-              );
-            },
-          ),
-        _buildTabBar(),
-      ],
+          _buildHorizontalNavigationBar(),
+        ],
+      ),
     );
   }
 
-  Widget _buildTabBar() {
-    return Stack(
-      children: [
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(left: 8, top: 8),
-            child: Container(
-              width: 60,
-              height: MediaQuery.of(context).size.height - 100,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: [
-                    Colors.black.withOpacity(0.4),
-                    Colors.transparent,
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: Column(
-                children: _tabs.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final tab = entry.value;
-                  final isSelected = _selectedTab == index;
-                  
-                  return InkWell(
-                    onTap: () {
-                      setState(() {
-                        _selectedTab = index;
-                        _currentPage = 0;
-                      });
-                      _initializeVideoKeys();
-                      _pageController.jumpToPage(0);
-                      print('Switched to tab: $_selectedTab');
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: isSelected 
-                            ? tab['dotColor'].withOpacity(0.15)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Column(
-                        children: [
-                          Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: isSelected 
-                                      ? tab['dotColor'].withOpacity(0.1)
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              ),
-                              Icon(
-                                tab['icon'],
-                                color: isSelected 
-                                    ? tab['dotColor']
-                                    : Colors.white.withOpacity(0.8),
-                                size: 24,
-                              ),
-                            ],
-                          ),
-                          if (isSelected) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              tab['label'],
-                              style: TextStyle(
-                                color: tab['dotColor'],
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ],
+  Widget _buildHorizontalNavigationBar() {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: _tabs.asMap().entries.map((entry) {
+                final index = entry.key;
+                final tab = entry.value;
+                final isSelected = _selectedTab == index;
+
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedTab = index;
+                      _currentPage = 0;
+                    });
+                    _initializeVideoKeys();
+                    _pageController.jumpToPage(0);
+                    print('Switched to tab: $_selectedTab');
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      tab['label'],
+                      style: TextStyle(
+                        color: isSelected
+                            ? tab['dotColor']
+                            : Colors.white.withOpacity(0.8),
+                        fontSize: isSelected ? 18 : 16,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
-                  );
-                }).toList(),
+                  ),
+                );
+              }).toList(),
+            ),
+            GestureDetector(
+              onTap: () {
+                showSearch(
+                  context: context,
+                  delegate: VideoSearchDelegate(_forYouVideos),
+                );
+              },
+              child: Icon(
+                Icons.search,
+                color: Colors.white,
+                size: 24,
               ),
             ),
-          ),
+          ],
         ),
-        
-        SafeArea(
-          child: Align(
-            alignment: Alignment.topRight,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 8, right: 16),
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.1),
-                    width: 0.5,
-                  ),
-                ),
-                child: IconButton(
-                  icon: Icon(
-                    Icons.search,
-                    color: Colors.white.withOpacity(0.8),
-                    size: 24,
-                  ),
-                  onPressed: () {
-                    print('Search pressed');
-                  },
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
+      ),
+    );
+  }
+}
+
+class VideoSearchDelegate extends SearchDelegate {
+  final List<VideoModel> videos;
+
+  VideoSearchDelegate(this.videos);
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, null);
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    final results = videos
+        .where((video) => video.description.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+
+    return ListView.builder(
+      itemCount: results.length,
+      itemBuilder: (context, index) {
+        final video = results[index];
+        return ListTile(
+          leading: Image.network(video.userAvatar),
+          title: Text(video.username),
+          subtitle: Text(video.description),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    final suggestions = videos
+        .where((video) => video.description.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+
+    return ListView.builder(
+      itemCount: suggestions.length,
+      itemBuilder: (context, index) {
+        final video = suggestions[index];
+        return ListTile(
+          leading: Image.network(video.userAvatar),
+          title: Text(video.username),
+        );
+      },
     );
   }
 }
