@@ -13,8 +13,9 @@ class ThreadsScreen extends StatefulWidget {
 }
 
 class _ThreadsScreenState extends State<ThreadsScreen> {
-  String _selectedCategory = 'For You';
+  String _selectedCategory = 'All';
   List<String> _categories = [
+    'All',
     'For You',
     'Following',
     'Programming',
@@ -22,10 +23,11 @@ class _ThreadsScreenState extends State<ThreadsScreen> {
     'Tech',
     'Career',
     'Mobile',
+    'Blockchain',
   ];
 
   // Sample thread data
-  final List<ThreadModel> threads = [
+  final List<ThreadModel> _allThreads = [
     ThreadModel(
       id: '1',
       username: '@techie',
@@ -68,7 +70,7 @@ class _ThreadsScreenState extends State<ThreadsScreen> {
       likes: 203,
       comments: 37,
       reposts: 16,
-      tags: ['flutter', 'statemanagement'],
+      tags: ['flutter', 'statemanagement', 'mobile'],
     ),
     ThreadModel(
       id: '5',
@@ -90,7 +92,7 @@ class _ThreadsScreenState extends State<ThreadsScreen> {
       likes: 412,
       comments: 78,
       reposts: 35,
-      tags: ['career', 'learning'],
+      tags: ['career', 'learning', 'tech'],
     ),
     ThreadModel(
       id: '7',
@@ -101,9 +103,27 @@ class _ThreadsScreenState extends State<ThreadsScreen> {
       likes: 189,
       comments: 32,
       reposts: 14,
-      tags: ['opensource', 'coding'],
+      tags: ['opensource', 'coding', 'programming'],
     )
   ];
+
+  List<ThreadModel> get _filteredThreads {
+    if (_selectedCategory == 'All') {
+      // Default to all threads if 'All' is selected
+      return _allThreads;
+    } else if (_selectedCategory == 'For You') {
+      return _allThreads; // Placeholder for personalized feed
+    } else if (_selectedCategory == 'Following') {
+      // TODO: Implement following logic when user authentication is added
+      return []; 
+    } else {
+      // Filter threads based on selected category (case-insensitive)
+      return _allThreads.where((thread) {
+        return thread.tags.any((tag) => 
+          tag.toLowerCase() == _selectedCategory.toLowerCase());
+      }).toList();
+    }
+  }
 
   void _navigateToCategoryManagement() async {
     final result = await Navigator.of(context).push(
@@ -118,9 +138,9 @@ class _ThreadsScreenState extends State<ThreadsScreen> {
     if (result != null && result is List<String>) {
       setState(() {
         _categories = result;
-        // Reset selected category to 'For You' if current selection is no longer valid
+        // Reset selected category to 'All' if current selection is no longer valid
         if (!_categories.contains(_selectedCategory)) {
-          _selectedCategory = 'For You';
+          _selectedCategory = 'All';
         }
       });
     }
@@ -137,7 +157,7 @@ class _ThreadsScreenState extends State<ThreadsScreen> {
     // If a new thread is created, add it to the threads list
     if (result != null && result is ThreadModel) {
       setState(() {
-        threads.insert(0, result); // Add new thread to the top of the list
+        _allThreads.insert(0, result); // Add new thread to the top of the list
       });
     }
   }
@@ -210,9 +230,9 @@ class _ThreadsScreenState extends State<ThreadsScreen> {
           ),
         ],
         body: ListView.builder(
-          itemCount: threads.length,
+          itemCount: _filteredThreads.length,
           itemBuilder: (context, index) {
-            final thread = threads[index];
+            final thread = _filteredThreads[index];
             return _ThreadCard(thread: thread);
           },
         ),

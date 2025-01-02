@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../widgets/video_post_card.dart';
+import '../widgets/live_video_card.dart';
 import '../models/video_model.dart';
+import '../models/live_model.dart';
 import '../themes/app_theme.dart';
 import '../widgets/discover_grid.dart';
 
@@ -15,7 +17,7 @@ class _VideosScreenState extends State<VideosScreen>
   final PageController _pageController = PageController();
   int _currentPage = 0;
   int _selectedTab = 2; // Start with "For You" tab
-  final Map<int, GlobalKey<VideoPostCardState>> _videoKeys = {};
+  final Map<int, GlobalKey> _videoKeys = {};
 
   final List<Map<String, dynamic>> _tabs = [
     {
@@ -61,7 +63,34 @@ class _VideosScreenState extends State<VideosScreen>
     ),
   ];
 
-  final List<VideoModel> _liveVideos = [];
+  // Mock Live Streams
+  final List<LiveModel> _liveVideos = [
+    LiveModel.mock(
+      id: '1',
+      streamerUsername: '@gamerPro',
+      streamTitle: 'Epic Gaming Marathon',
+      streamCategory: 'Gaming',
+      viewers: 5420,
+      streamThumbnail: 'https://i.pravatar.cc/300?img=1',
+    ),
+    LiveModel.mock(
+      id: '2',
+      streamerUsername: '@musicLive',
+      streamTitle: 'Acoustic Session',
+      streamCategory: 'Music',
+      viewers: 2350,
+      streamThumbnail: 'https://i.pravatar.cc/300?img=2',
+    ),
+    LiveModel.mock(
+      id: '3',
+      streamerUsername: '@codingStream',
+      streamTitle: 'Live Coding Challenge',
+      streamCategory: 'Programming',
+      viewers: 1870,
+      streamThumbnail: 'https://i.pravatar.cc/300?img=3',
+    ),
+  ];
+
   final List<VideoModel> _discoverVideos = [];
   final List<VideoModel> _followingVideos = [];
 
@@ -76,17 +105,17 @@ class _VideosScreenState extends State<VideosScreen>
     _videoKeys.clear();
     final currentVideos = _getCurrentFeedVideos();
     for (int i = 0; i < currentVideos.length; i++) {
-      _videoKeys[i] = GlobalKey<VideoPostCardState>();
+      _videoKeys[i] = GlobalKey();
     }
     print('Initialized video keys for tab $_selectedTab');
   }
 
-  List<VideoModel> _getCurrentFeedVideos() {
+  dynamic _getCurrentFeedVideos() {
     switch (_selectedTab) {
       case 0:
         return _liveVideos;
       case 1:
-        return _discoverVideos;
+        return _discoverVideos.isEmpty ? _forYouVideos : _discoverVideos;
       case 2:
         return _forYouVideos;
       case 3:
@@ -115,14 +144,24 @@ class _VideosScreenState extends State<VideosScreen>
 
   void _pauseAllVideos() {
     _videoKeys.forEach((_, key) {
-      final videoCard = key.currentState;
-      videoCard?.pauseVideo();
+      if (key.currentState is VideoPostCardState) {
+        (key.currentState as VideoPostCardState).pauseVideo();
+      } else if (key.currentState is LiveVideoCardState) {
+        (key.currentState as LiveVideoCardState).pauseVideo();
+      }
     });
   }
 
   void _handlePageChange(int index) {
-    final previousVideo = _videoKeys[_currentPage]?.currentState;
-    previousVideo?.pauseVideo();
+    final currentVideos = _getCurrentFeedVideos();
+    final previousKey = _videoKeys[_currentPage];
+    
+    if (previousKey?.currentState is VideoPostCardState) {
+      (previousKey!.currentState as VideoPostCardState).pauseVideo();
+    } else if (previousKey?.currentState is LiveVideoCardState) {
+      (previousKey!.currentState as LiveVideoCardState).pauseVideo();
+    }
+
     setState(() {
       _currentPage = index;
     });
@@ -172,11 +211,22 @@ class _VideosScreenState extends State<VideosScreen>
               onPageChanged: _handlePageChange,
               itemCount: _getCurrentFeedVideos().length,
               itemBuilder: (context, index) {
-                return VideoPostCard(
-                  key: _videoKeys[index],
-                  video: _getCurrentFeedVideos()[index],
-                  isVisible: _currentPage == index,
-                );
+                final currentVideos = _getCurrentFeedVideos();
+                
+                // Check if it's a live stream or video
+                if (currentVideos is List<LiveModel>) {
+                  return LiveVideoCard(
+                    key: _videoKeys[index],
+                    liveStream: currentVideos[index],
+                    isVisible: _currentPage == index,
+                  );
+                } else {
+                  return VideoPostCard(
+                    key: _videoKeys[index],
+                    video: currentVideos[index],
+                    isVisible: _currentPage == index,
+                  );
+                }
               },
             ),
           _buildHorizontalNavigationBar(),
